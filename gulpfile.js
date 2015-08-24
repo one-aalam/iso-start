@@ -3,7 +3,8 @@ var path = require('path'),
     webpack = require('webpack'),
     gulp  = require('gulp'),
     nodemon = require('nodemon'),
-    DeepMerge = require('deep-merge');
+    DeepMerge = require('deep-merge'),
+    WebpackDevServer = require('webpack-dev-server');;
 
 var deepmerge = DeepMerge(function(target, source, key) {
   if(target instanceof Array) {
@@ -17,7 +18,7 @@ var deepmerge = DeepMerge(function(target, source, key) {
 var defaultConfig = {
   module: {
     loaders: [
-      {test: /\.js$/, exclude: /node_modules/, loaders: ['babel'] },
+      {test: /\.js$/, exclude: /node_modules/, loaders: ['monkey-hot', 'babel'] },
     ]
   }
 };
@@ -45,30 +46,45 @@ var nodeModules = {};
 
 
 var frontendConfig = config({
-  entry: './static/js/main.js',
+  entry: [
+   'webpack-dev-server/client?http://localhost:3000',
+   'webpack/hot/only-dev-server',
+   './static/js/main.js'
+  ],
   output: {
     path: path.join(__dirname, 'build'),
+    publicPath: 'http://localhost:3000/build',
     filename: 'frontend.js'
-  }
+  },
+  plugins: [
+    new webpack.HotModuleReplacementPlugin({ quiet: true })
+  ]
 });
 
 var backendConfig = config({
-  entry: './src/main.js',
+  entry: [
+    'webpack/hot/signal.js',
+    './src/main.js'
+  ],
   target: 'node', // don't touch built-in modules
+  recordsPath: path.join(__dirname, 'build/_records'),
   plugins: [
   // Add sourcemap support for back-end
     new webpack.BannerPlugin('require("source-map-support").install();',
     { raw: true, entryOnly: false }),
   // Ignore CSS/Less for backend
-    new webpack.IgnorePlugin(/\.(css|less)$/)
+    new webpack.IgnorePlugin(/\.(css|less)$/),
+    new webpack.HotModuleReplacementPlugin({ quiet: true })
   ],
   output: {
         path: path.join(__dirname, 'build'),
         filename: 'backend.js'
   },
   externals: nodeModules,
-  __dirname: true,
-  __filename: true
+  node: {
+    __dirname: true,
+    __filename: true
+  }
 });
 
 function onBuild(done) {
@@ -90,8 +106,12 @@ function onBuild(done) {
       webpack(backendConfig).run(onBuild(done));
     });
     gulp.task('backend-watch', function() {
+      var firedDone = false;
       webpack(backendConfig).watch(100, function(err, stats) {
-        onBuild()(err, stats);
+        if(!firedDone) {
+          firedDone = true;
+          done();
+        }
         nodemon.restart();
       });
     });
@@ -100,7 +120,18 @@ function onBuild(done) {
       webpack(frontendConfig).run(onBuild(done));
     });
     gulp.task('frontend-watch', function() {
-      webpack(frontendConfig).watch(100, onBuild());
+     // webpack(frontendConfig).watch(100, onBuild());
+     new WebpackDevServer(webpack(frontendConfig), {
+        publicPath: frontendConfig.output.publicPath,
+        hot: true
+      }).listen(3000, 'localhost', function (err, result) {
+        if(err) {
+          console.log(err);
+        }
+        else {
+          console.log('webpack dev server listening at localhost:3000');
+        }
+      });
     });
 
     gulp.task('build', ['frontend-build', 'backend-build']);
