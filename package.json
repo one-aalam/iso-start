@@ -1,0 +1,19 @@
+{
+  "name": "iso-start",
+  "version": "1.0.0",
+  "description": "Node.js/Express based project scaffolding with isomorphic webpack goodness",
+  "main": "src/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/main.js"
+  },
+  "author": "Aftab Alam",
+  "license": "ISC",
+  "devDependencies": {
+    "babel-loader": "^5.3.2",
+    "webpack": "^1.11.0"
+  },
+  "dependencies": {
+    "express": "^4.13.3"
+  }
+}
