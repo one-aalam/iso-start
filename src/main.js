@@ -1,5 +1,5 @@
-var express = require('express'),
-    routes  = require('./routes');
+import express from 'express';
+import routes from './routes';
 
 
 var app = express();

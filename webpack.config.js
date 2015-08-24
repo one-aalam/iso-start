@@ -24,6 +24,11 @@ var nodeModules = {};
         // Ignore CSS/Less for backend
         new webpack.IgnorePlugin(/\.(css|less)$/)
       ],
+      module: {
+        loaders: [
+          {test: /\.js$/, exclude: /node_modules/, loaders: ['babel'] },
+        ]
+      },
       output: {
         path: path.join(__dirname, 'build'),
         filename: 'backend.js'
