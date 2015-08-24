@@ -17,9 +17,17 @@ var nodeModules = {};
     module.exports = {
       entry: './src/main.js',
       target: 'node', // don't touch built-in modules
+      plugins: [
+        // Add sourcemap support for back-end
+        new webpack.BannerPlugin('require("source-map-support").install();',
+          { raw: true, entryOnly: false }),
+        // Ignore CSS/Less for backend
+        new webpack.IgnorePlugin(/\.(css|less)$/)
+      ],
       output: {
         path: path.join(__dirname, 'build'),
         filename: 'backend.js'
       },
-      externals: nodeModules
+      externals: nodeModules,
+      devtool: 'sourcemap'
     }

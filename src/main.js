@@ -8,7 +8,6 @@ var app = express();
     app.get('/about',routes.about);
 
 
-
     app.listen(8080, function(){
         console.log("Application started at 8080");
     });
